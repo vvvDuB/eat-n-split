@@ -48,6 +48,17 @@ const App = () => {
     }
   };
 
+  const handleSplitBill = (value) => {
+    console.log(value);
+    setUsers((users) =>
+      users.map((user) =>
+        user.id === selectUser.id
+          ? { ...user, balance: user.balance + value }
+          : user
+      )
+    );
+  };
+
   return (
     <div className="app">
       <div className="sidebar">
@@ -64,7 +75,9 @@ const App = () => {
           {showAddUser ? "Chiudi" : "Aggiungi utente"}
         </Button>
       </div>
-      {selectUser && <FormSplitBill user={selectUser} />}
+      {selectUser && (
+        <FormSplitBill user={selectUser} onSplitBill={handleSplitBill} />
+      )}
     </div>
   );
 };
@@ -148,13 +161,17 @@ const FormAddUser = ({ onSetUser, userNum }) => {
   );
 };
 
-const FormSplitBill = ({ user }) => {
-  const [bill, setBill] = useState("");
-  const [paidByUser, setPaidByUser] = useState("");
+const FormSplitBill = ({ user, onSplitBill }) => {
+  const [bill, setBill] = useState(0);
+  const [paidByUser, setPaidByUser] = useState(0);
   const [whoIsPaying, setWhoIsPaying] = useState("user");
 
   const handleSplitBill = (e) => {
     e.preventDefault();
+
+    if (!bill) return;
+
+    onSplitBill(whoIsPaying === "user" ? paidByUser : -paidByUser);
   };
 
   return (
@@ -183,7 +200,7 @@ const FormSplitBill = ({ user }) => {
       <input
         type="text"
         disabled
-        value={bill - paidByUser === 0 ? "" : Math.abs(bill - paidByUser)}
+        value={bill - paidByUser === 0 ? 0 : Math.abs(bill - paidByUser)}
       />
       <label>* Who is paying the bill</label>
       <select
@@ -191,7 +208,7 @@ const FormSplitBill = ({ user }) => {
         onChange={(e) => setWhoIsPaying(e.target.value)}
       >
         <option value={"you"}>You</option>
-        <option value={user.name}>{user.name}</option>
+        <option value={"friend"}>{user.name}</option>
       </select>
       <Button>Dividi</Button>
     </form>
