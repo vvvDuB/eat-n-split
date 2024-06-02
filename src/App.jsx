@@ -32,16 +32,30 @@ const Button = ({ children, actions }) => {
 const App = () => {
   const [showAddUser, setShowAddUser] = useState(false);
   const [users, setUsers] = useState(Users);
+  const [selectUser, setSelectUser] = useState();
 
   const handleSetUser = (newUser) => {
     setUsers([...users, newUser]);
     setShowAddUser((show) => !show);
   };
 
+  const handleSelection = (user) => {
+    setShowAddUser(false);
+    if (selectUser === user) {
+      setSelectUser();
+    } else {
+      setSelectUser(user);
+    }
+  };
+
   return (
     <div className="app">
       <div className="sidebar">
-        <List users={users} />
+        <List
+          users={users}
+          handleSelection={handleSelection}
+          selectedUser={selectUser}
+        />
         {showAddUser && (
           <FormAddUser onSetUser={handleSetUser} userNum={users.length} />
         )}
@@ -50,24 +64,31 @@ const App = () => {
           {showAddUser ? "Chiudi" : "Aggiungi utente"}
         </Button>
       </div>
-      <FormSplitBill />
+      {selectUser && <FormSplitBill user={selectUser} />}
     </div>
   );
 };
 
-const List = ({ users, actions }) => {
+const List = ({ users, handleSelection, selectedUser }) => {
   return (
     <ul>
       {users.map((user) => (
-        <User key={user.id} user={user} actions={actions} />
+        <User
+          key={user.id}
+          user={user}
+          onSelection={handleSelection}
+          selectedUser={selectedUser}
+        />
       ))}
     </ul>
   );
 };
 
-const User = ({ user, actions }) => {
+const User = ({ user, onSelection, selectedUser }) => {
+  const isSelected = user.id === selectedUser?.id;
+
   return (
-    <li>
+    <li className={isSelected ? "selected" : ""}>
       <img src={user.img} alt={user.name} />
       <h3>{user.name}</h3>
       {user.balance < 0 && (
@@ -83,7 +104,9 @@ const User = ({ user, actions }) => {
       {user.balance === 0 && (
         <p className="gray">Tu e {user.name} siete pari.</p>
       )}
-      <Button actions={() => actions(user)}>Select</Button>
+      <Button actions={() => onSelection(user)}>
+        {isSelected ? "Close" : "Select"}
+      </Button>
     </li>
   );
 };
@@ -125,26 +148,51 @@ const FormAddUser = ({ onSetUser, userNum }) => {
   );
 };
 
-const FormSplitBill = () => {
+const FormSplitBill = ({ user }) => {
+  const [bill, setBill] = useState("");
+  const [paidByUser, setPaidByUser] = useState("");
+  const [whoIsPaying, setWhoIsPaying] = useState("user");
+
+  const handleSplitBill = (e) => {
+    e.preventDefault();
+  };
+
   return (
-    <form className="form-split-bill">
-      <h2>Split a bill with X</h2>
-
+    <form onSubmit={handleSplitBill} className="form-split-bill">
+      <h2>Split a bill with {user.name}</h2>
       <label>* Bill value</label>
-      <input type="text" />
-
+      <input
+        type="text"
+        value={bill}
+        onClick={() => setBill("")}
+        onChange={(e) => setBill(Number(e.target.value))}
+      />
       <label>* Your expense</label>
-      <input type="text" />
+      <input
+        type="text"
+        value={paidByUser}
+        onClick={() => setPaidByUser("")}
+        onChange={(e) =>
+          setPaidByUser(
+            Number(e.target.value) > bill ? paidByUser : Number(e.target.value)
+          )
+        }
+      />
 
-      <label>* X's expense</label>
-      <input type="text" disabled />
-
+      <label>* {user.name}'s expense</label>
+      <input
+        type="text"
+        disabled
+        value={bill - paidByUser === 0 ? "" : Math.abs(bill - paidByUser)}
+      />
       <label>* Who is paying the bill</label>
-      <select>
+      <select
+        value={whoIsPaying}
+        onChange={(e) => setWhoIsPaying(e.target.value)}
+      >
         <option value={"you"}>You</option>
-        <option value={"X"}>X</option>
+        <option value={user.name}>{user.name}</option>
       </select>
-
       <Button>Dividi</Button>
     </form>
   );
