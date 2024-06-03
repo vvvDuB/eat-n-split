@@ -50,6 +50,7 @@ const App = () => {
 
   const handleSplitBill = (value) => {
     console.log(value);
+    console.log(value);
     setUsers((users) =>
       users.map((user) =>
         user.id === selectUser.id
@@ -147,14 +148,14 @@ const FormAddUser = ({ onSetUser, userNum }) => {
 
   return (
     <form onSubmit={handleSubmit} className="form-add-friend">
-      <label>* Nome</label>
+      <label>Nome</label>
       <input
         value={name}
         onChange={(e) => setName(e.target.value)}
         type="text"
       />
 
-      <label>* Immagine</label>
+      <label>Immagine</label>
       <input value={img} onChange={(e) => setImg(e.target.value)} type="text" />
       <Button>Aggiungi</Button>
     </form>
@@ -171,38 +172,43 @@ const FormSplitBill = ({ user, onSplitBill }) => {
 
     if (!bill) return;
 
-    onSplitBill(whoIsPaying === "user" ? paidByUser : -paidByUser);
+    console.log({
+      totale: bill,
+      "le tue spese": paidByUser,
+      "chi paga": whoIsPaying,
+      "totale di chi paga": paidByUser,
+    });
+
+    onSplitBill(
+      whoIsPaying === "user"
+        ? Math.abs(bill - paidByUser) === 0
+          ? bill
+          : bill - paidByUser
+        : -paidByUser
+    );
   };
 
   return (
     <form onSubmit={handleSplitBill} className="form-split-bill">
       <h2>Split a bill with {user.name}</h2>
-      <label>* Bill value</label>
+      <label> Bill value</label>
       <input
         type="text"
         value={bill}
-        onClick={() => setBill("")}
+        onClick={() => setBill(0)}
         onChange={(e) => setBill(Number(e.target.value))}
       />
-      <label>* Your expense</label>
+      <label>Your expense</label>
       <input
         type="text"
         value={paidByUser}
-        onClick={() => setPaidByUser("")}
-        onChange={(e) =>
-          setPaidByUser(
-            Number(e.target.value) > bill ? paidByUser : Number(e.target.value)
-          )
-        }
+        onClick={() => setPaidByUser(0)}
+        onChange={(e) => setPaidByUser(Number(e.target.value))}
       />
 
-      <label>* {user.name}'s expense</label>
-      <input
-        type="text"
-        disabled
-        value={bill - paidByUser === 0 ? 0 : Math.abs(bill - paidByUser)}
-      />
-      <label>* Who is paying the bill</label>
+      <label>{user.name}'s expense</label>
+      <input type="text" disabled value={Math.abs(bill - paidByUser)} />
+      <label>Who is paying the bill</label>
       <select
         value={whoIsPaying}
         onChange={(e) => setWhoIsPaying(e.target.value)}
